@@ -19,6 +19,7 @@ import (
 	"github.com/gogits/gogs/modules/context"
 	"github.com/gogits/gogs/modules/log"
 	"github.com/gogits/gogs/modules/markdown"
+	"github.com/gogits/gogs/modules/restructuredtext"
 	"github.com/gogits/gogs/modules/template"
 	"github.com/gogits/gogs/modules/template/highlight"
 )
@@ -93,16 +94,20 @@ func Home(ctx *context.Context) {
 			_, isTextFile := base.IsTextFile(buf)
 			_, isImageFile := base.IsImageFile(buf)
 			ctx.Data["IsFileText"] = isTextFile
-
+			log.Info("Hey render lets see the filetype of %s", blob.Name())
 			switch {
 			case isImageFile:
 				ctx.Data["IsImageFile"] = true
 			case isTextFile:
 				d, _ := ioutil.ReadAll(dataRc)
 				buf = append(buf, d...)
-				readmeExist := markdown.IsMarkdownFile(blob.Name()) || markdown.IsReadmeFile(blob.Name())
-				ctx.Data["ReadmeExist"] = readmeExist
-				if readmeExist {
+				readmeMarkdown := markdown.IsMarkdownFile(blob.Name()) || markdown.IsReadmeFile(blob.Name())
+				ctx.Data["ReadmeExist"] = readmeMarkdown
+				log.Info("Hey render lets see the filetype of %s", blob.Name())
+				if restructuredtext.IsReStructuredTextFile(blob.Name()) {
+					log.Info("Hey render reST, %s is a reStructuredText file!", blob.Name())
+					ctx.Data["FileContent"] = string(restructuredtext.Render(buf, path.Dir(treeLink), ctx.Repo.Repository.ComposeMetas()))
+				} else if readmeMarkdown {
 					ctx.Data["FileContent"] = string(markdown.Render(buf, path.Dir(treeLink), ctx.Repo.Repository.ComposeMetas()))
 				} else {
 					if err, content := template.ToUtf8WithErr(buf); err != nil {
