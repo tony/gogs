@@ -175,6 +175,8 @@ func Home(ctx *context.Context) {
 					d, _ := ioutil.ReadAll(dataRc)
 					buf = append(buf, d...)
 					switch {
+					case restructuredtext.IsReStructuredTextFile(readmeFile.Name()):
+						buf = restructuredtext.Render(buf, treeLink, ctx.Repo.Repository.ComposeMetas())
 					case markdown.IsMarkdownFile(readmeFile.Name()):
 						buf = markdown.Render(buf, treeLink, ctx.Repo.Repository.ComposeMetas())
 					default:
